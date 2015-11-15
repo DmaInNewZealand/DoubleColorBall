@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class Board : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class Board : MonoBehaviour
 
     Gem[,] m_gems;
     Gem m_currentGem;
+
+    private bool isSwapping = false;
 
     void Awake()
     {
@@ -33,7 +36,14 @@ public class Board : MonoBehaviour
 
     public void SwapGems(Gem selectedGem)
     {
-        if(m_currentGem == null)
+        if(isSwapping)
+        {
+            return;
+        }
+
+        selectedGem.ToggleSelector();
+
+        if (m_currentGem == null)
         {
             m_currentGem = selectedGem;
         }
@@ -41,17 +51,59 @@ public class Board : MonoBehaviour
         {
             m_currentGem = null;
         }
-        else if(!m_currentGem.IsAdjacent(selectedGem))
+        else if (!m_currentGem.IsAdjacent(selectedGem))
         {
             m_currentGem.ToggleSelector();
             m_currentGem = selectedGem;
         }
         else
         {
+            isSwapping = true;
+
+            Swap(m_currentGem, selectedGem);
+
             m_currentGem.ToggleSelector();
             selectedGem.ToggleSelector();
             m_currentGem = null;
+
         }
+    }
+
+    private void Swap(Gem gem1, Gem gem2)
+    {
+        //Swap X, Y
+        int tempX = gem1.x;
+        int tempY = gem1.y;
+
+        gem1.x = gem2.x;
+        gem1.y = gem2.y;
+
+        gem2.x = tempX;
+        gem2.y = tempY;
+
+        //Swap position
+        Vector3 gem1Position = gem1.transform.position;
+        Vector3 gem2Position = gem2.transform.position;
+
+        StartCoroutine(MoveGem(gem1, gem1Position, gem2Position));
+        StartCoroutine(MoveGem(gem2, gem2Position, gem1Position));
+
+    }
+
+    IEnumerator MoveGem(Gem gem, Vector3 from, Vector3 to)
+    {
+
+        float time = Time.time;
+        while (Vector3.Distance(gem.transform.position, to) > 0.01f)
+        {
+            gem.transform.position = Vector3.Lerp(from, to, (Time.time - time) * 1.2f);
+
+            yield return null;
+        }
+
+        gem.transform.position = to;
+
+        isSwapping = false;
     }
 
     // Update is called once per frame

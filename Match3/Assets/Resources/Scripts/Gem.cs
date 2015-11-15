@@ -57,7 +57,6 @@ public class Gem : MonoBehaviour
 
     void OnMouseDown()
     {
-        ToggleSelector();
         GameObject.Find("Board").GetComponent<Board>().SwapGems(this);
     }
 }
